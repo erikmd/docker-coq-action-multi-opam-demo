@@ -94,6 +94,5 @@ nlia.cache
 nra.cache
 
 ### Misc
-Makefile
 Makefile.conf
 .coqdeps.d
