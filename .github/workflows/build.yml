@@ -75,7 +75,9 @@ jobs:
               {{before_install}}
               {{install}}
               {{after_install}}
+              {{before_script}}
               {{script}}
+              {{after_script}}
             done
             # The loop in the reverse order
             for (( i=${#opams[@]}-1; i>=0; i-- )); do
