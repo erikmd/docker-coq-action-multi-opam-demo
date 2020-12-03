@@ -1,0 +1,76 @@
+name: CI
+
+# Controls when the action will run:
+# https://help.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#filtering-for-specific-branches-tags-and-paths
+# Triggers the workflow on push events for the master branch only,
+# or all pull request events:
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '**'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# This workflow contains two jobs, build and mathcomp:
+jobs:
+  build:
+    # The type of runner that the job will run on;
+    # the OS must be GNU/Linux to be able to use the docker-coq-action
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        coq_version:
+          - '8.12'
+        ocaml_version:
+          - '4.07-flambda'
+        opam_files:
+          # - 'coq-libdemo.opam' # commented-out to save CI cost
+          - 'coq-libdemo.opam coq-demo.opam'
+      # at most 20 concurrent jobs per free account:
+      # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#usage-limits
+      max-parallel: 4
+      # don't cancel all in-progress jobs if one matrix job fails:
+      fail-fast: false
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - uses: coq-community/docker-coq-action@v1
+        with:
+          opam_file: ''
+          coq_version: ${{ matrix.coq_version }}
+          ocaml_version: ${{ matrix.ocaml_version }}
+          # optional, to customize startGroup
+          install: |
+            startGroup "Install $PACKAGE dependencies"
+              opam pin add -n -y -k path $PACKAGE $WORKDIR
+              opam update -y
+              opam install -y -j 2 $PACKAGE --deps-only
+            endGroup
+          # optional, to customize startGroup
+          script: |
+            startGroup "Build $PACKAGE"
+              opam install -y -v -j 2 $PACKAGE
+              opam list
+            endGroup
+          custom_script: |
+            echo "Put here global code (sudo apt-get install, etc.)"
+            opams=(${{matrix.opam_files}})
+            for (( i=0; i<=${#opams[@]}; i++ )); do
+              opam=${opams[i]}
+              WORKDIR=$(dirname "$opam")
+              PACKAGE=$(basename "$opam" .opam)
+              {{before_install}}
+              {{install}}
+              {{after_install}}
+              {{script}}
+            done
+            # The loop in the reverse order
+            for (( i=${#opams[@]}; i>=0; i-- )); do
+              opam=${opams[i]}
+              PACKAGE=$(basename "$opam" .opam)
+              {{uninstall}}
+            done
