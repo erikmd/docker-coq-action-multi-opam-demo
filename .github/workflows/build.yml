@@ -56,8 +56,15 @@ jobs:
               opam install -y -v -j 2 $PACKAGE
               opam list
             endGroup
+          # optional, to customize startGroup
+          uninstall: |
+            startGroup "Uninstall $PACKAGE"
+              opam remove $PACKAGE
+            endGroup
           custom_script: |
-            echo "Put here global code (sudo apt-get install, etc.)"
+            startGroup "Startup code"
+              echo "sudo apt-get install, etc."
+            endGroup
             opams=(${{matrix.opam_files}})
             for (( i=0; i<${#opams[@]}; i++ )); do
               opam=${opams[i]}
@@ -73,6 +80,8 @@ jobs:
             # The loop in the reverse order
             for (( i=${#opams[@]}-1; i>=0; i-- )); do
               opam=${opams[i]}
+              { set +x; } 2>/dev/null
               PACKAGE=$(basename "$opam" .opam)
+              set -x
               {{uninstall}}
             done
