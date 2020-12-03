@@ -59,17 +59,19 @@ jobs:
           custom_script: |
             echo "Put here global code (sudo apt-get install, etc.)"
             opams=(${{matrix.opam_files}})
-            for (( i=0; i<=${#opams[@]}; i++ )); do
+            for (( i=0; i<${#opams[@]}; i++ )); do
               opam=${opams[i]}
+              { set +x; } 2>/dev/null
               WORKDIR=$(dirname "$opam")
               PACKAGE=$(basename "$opam" .opam)
+              set -x
               {{before_install}}
               {{install}}
               {{after_install}}
               {{script}}
             done
             # The loop in the reverse order
-            for (( i=${#opams[@]}; i>=0; i-- )); do
+            for (( i=${#opams[@]}-1; i>=0; i-- )); do
               opam=${opams[i]}
               PACKAGE=$(basename "$opam" .opam)
               {{uninstall}}
