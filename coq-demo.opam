@@ -1,0 +1,29 @@
+opam-version: "2.0"
+maintainer: "erik@martin-dorel.org"
+version: "dev"
+
+homepage: "https://github.com/erikmd/docker-coq-action-multi-opam-demo"
+dev-repo: "git+https://github.com/erikmd/docker-coq-action-multi-opam-demo.git"
+bug-reports: "https://github.com/erikmd/docker-coq-action-multi-opam-demo/issues"
+license: "MIT"
+
+synopsis: "Demo of docker-coq-action"
+description: """
+Demo of docker-coq-action involving several .opam files.
+"""
+
+build: [
+  [make "-C" "src/demo" "-j%{jobs}%"]
+]
+install: [make "-C" "src/demo" "install"]
+
+depends: [
+  "ocaml" {>= "4.05.0"}
+  "coq" {(>= "8.6") | (= "dev")}
+  "coq-mathcomp-ssreflect" {(>= "1.7.0")}
+  "coq-libdemo" {= version}
+]
+
+authors: [
+  "Erik Martin-Dorel <erik@martin-dorel.org>"
+]
